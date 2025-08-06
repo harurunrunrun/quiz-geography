@@ -99,6 +99,9 @@ let totalQuestions = 0;
 let containerNextHandler = null;   /* 次問題用ワンショットリスナ */
 let readyForNext = false;          /* ← 追加：スマホの自動遷移対策 */
 
+const isTouchDevice = (('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0) || 'ontouchstart' in window || /Mobi|Android/i.test(navigator.userAgent));
+
+
 function updateStats(){
     const rate = totalQuestions ? (totalCorrect / totalQuestions * 100).toFixed(1) : '0.0';
     const url = "https://harurunrunrun.github.io/quiz-geography";
@@ -156,6 +159,8 @@ function initQuiz(){
 }
 
 function scheduleContainerNext(){
+  if(isTouchDevice){ return; }  // ← 追加：タッチデバイスなら早期リターン
+  
     const container = document.getElementById('options');
     containerNextHandler = () => {
         if(!readyForNext) return;  // 2 秒経過前のタップは無視
