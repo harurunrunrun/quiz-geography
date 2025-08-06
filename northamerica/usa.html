@@ -97,6 +97,7 @@ let currentStreak = 0;
 let maxStreak     = 0;
 let totalQuestions = 0;
 let containerNextHandler = null;   /* 次問題用ワンショットリスナ */
+let readyForNext = false;          /* ← 追加：スマホの自動遷移対策 */
 
 function updateStats(){
     const rate = totalQuestions ? (totalCorrect / totalQuestions * 100).toFixed(1) : '0.0';
@@ -124,9 +125,10 @@ function pickUnique(array, count, exclude){
 function initQuiz(){
     const container = document.getElementById('options');
     if(containerNextHandler){
-        container.removeEventListener('click', containerNextHandler);
+        container.removeEventListener('pointerdown', containerNextHandler);
         containerNextHandler = null;
     }
+    readyForNext = false;  // ← 追加
 
     const entries = Object.entries(jsonData);
     const [qText, qAns] = entries[Math.floor(Math.random() * entries.length)];
@@ -155,10 +157,12 @@ function initQuiz(){
 
 function scheduleContainerNext(){
     const container = document.getElementById('options');
-    setTimeout(() => {
-        containerNextHandler = () => initQuiz();
-        container.addEventListener('click', containerNextHandler, { once: true });
-    }, 500);
+    containerNextHandler = () => {
+        if(!readyForNext) return;  // 2 秒経過前のタップは無視
+        initQuiz();
+    };
+    container.addEventListener('pointerdown', containerNextHandler, { once: true });
+    setTimeout(() => { readyForNext = true; }, 500);
 }
 
 function onClick(el){
