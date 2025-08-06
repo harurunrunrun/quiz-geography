@@ -2,43 +2,78 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>USA Phone Numbers QUIZ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>クイズ</title>
 <style>
-body { font-family: sans-serif; }
-#header { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-weight: bold; }
+body { font-family: sans-serif; margin: 0; padding: 0; }
+#header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 12px;
+  font-weight: bold;
+  font-size: 1rem;
+}
 #stats { white-space: nowrap; }
-#tweetBtn { font-size: 14px; text-decoration: none; border: 1px solid #1d9bf0; padding: 4px 8px; border-radius: 4px; }
+#tweetBtn {
+  font-size: 0.9rem;
+  text-decoration: none;
+  border: 1px solid #1d9bf0;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
 #tweetBtn:hover { background: #e8f5fe; }
-#pn   { margin: 24px 0; font-weight: bold; }
-.container { width: 300px; margin: 0 auto; cursor: pointer; }
+#pn   {
+  margin: 24px auto 16px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+}
+.container {
+  width: 90%;
+  max-width: 400px;
+  margin: 0 auto;
+  cursor: pointer;
+}
 .option {
-    border: 2px solid #333;
-    padding: 12px;
-    margin-bottom: 12px;
-    text-align: center;
-    transition: background 0.2s ease;
-    position: relative;
+  border: 2px solid #333;
+  padding: 14px 12px;
+  margin-bottom: 14px;
+  text-align: center;
+  transition: background 0.2s ease;
+  position: relative;
+  font-size: 1rem;
 }
 .option:hover   { background: #f0f0f0; }
 .option.disabled{ opacity: 0.5; pointer-events: none; }
 .option.correct { color: red; }
 .option.wrong   { color: #333; }
 .marker {
-    position: absolute;
-    left: -24px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 20px;
-    font-weight: bold;
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 .marker.circle { color: red;  }
 .marker.cross  { color: blue; }
 #nextBtn {
-    display: none;
-    margin-top: 24px;
-    padding: 8px 16px;
-    font-size: 16px;
-    cursor: pointer;
+  display: none;
+  margin: 24px auto;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: block;
+}
+@media (min-width: 480px){
+  #header{flex-wrap:nowrap;}
+  .marker{left:-24px;}
+  #nextBtn{max-width:400px;}
 }
 </style>
 </head>
@@ -65,9 +100,9 @@ let containerNextHandler = null;   /* 次問題用ワンショットリスナ */
 
 function updateStats(){
     const rate = totalQuestions ? (totalCorrect / totalQuestions * 100).toFixed(1) : '0.0';
-    const url = "dummy";
+    const url = "https://harurunrunrun.github.io/quiz-geography";
     document.getElementById('stats').textContent = `正解 ${totalCorrect} / 連続 ${currentStreak} / 最高連続 ${maxStreak} / 正解率 ${rate}%`;
-    const tweetText = `USA市外局番クイズ: 正解数 ${totalCorrect}，最高連続 ${maxStreak}，正解率 ${rate}% ${url}`;
+    const tweetText = `USA市外局番クイズ: 正解数 ${totalCorrect}，最高連続 ${maxStreak}，正解率 ${rate}% ${url}`
     document.getElementById('tweetBtn').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
 }
 
@@ -159,24 +194,22 @@ function onClick(el){
     scheduleContainerNext();
 }
 
-/* 次へボタン */
 document.getElementById('nextBtn').addEventListener('click', initQuiz);
 
-/* DOMContentLoaded 後に jsonData を取得して開始 */
 document.addEventListener('DOMContentLoaded', () => {
     jsonData = JSON.parse(document.getElementById('quiz-data').textContent);
     initQuiz();
 });
 </script>
 
-<!-- JSON を本体スクリプトの直後に配置 -->
+<!-- JSON をスクリプトの後に配置。必要に応じて大量のデータをここに追加 -->
 <script id="quiz-data" type="application/json">
 {
   "dummy1":"dummy1",
     "dummy2":"dummy2",
     "dummy3":"dummy3",
     "dummy4":"dummy4",
-    "dummy5":"dummy4"
+    "dummy5":"dummy5"
 }
 </script>
 
