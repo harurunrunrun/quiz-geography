@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>USA Phone Numbers QUIZ</title>
+<style>
+body { font-family: sans-serif; }
+#header { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-weight: bold; }
+#stats { white-space: nowrap; }
+#tweetBtn { font-size: 14px; text-decoration: none; border: 1px solid #1d9bf0; padding: 4px 8px; border-radius: 4px; }
+#tweetBtn:hover { background: #e8f5fe; }
+#pn   { margin: 24px 0; font-weight: bold; }
+.container { width: 300px; margin: 0 auto; cursor: pointer; }
+.option {
+    border: 2px solid #333;
+    padding: 12px;
+    margin-bottom: 12px;
+    text-align: center;
+    transition: background 0.2s ease;
+    position: relative;
+}
+.option:hover   { background: #f0f0f0; }
+.option.disabled{ opacity: 0.5; pointer-events: none; }
+.option.correct { color: red; }
+.option.wrong   { color: #333; }
+.marker {
+    position: absolute;
+    left: -24px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    font-weight: bold;
+}
+.marker.circle { color: red;  }
+.marker.cross  { color: blue; }
+#nextBtn {
+    display: none;
+    margin-top: 24px;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="stats">正解 0 / 連続 0 / 最高連続 0 / 正解率 0.0%</div>
+  <a id="tweetBtn" href="#" target="_blank">X でポスト</a>
+</div>
+
+<h2 id="pn">読み込み中…</h2>
+<div class="container" id="options"></div>
+<button id="nextBtn">次へ</button>
+
+<script>
+/* 統計用グローバル（jsonData は DOMContentLoaded 後に取得） */
+let jsonData      = null;
+let correctAnswer = null;
+let totalCorrect  = 0;
+let currentStreak = 0;
+let maxStreak     = 0;
+let totalQuestions = 0;
+let containerNextHandler = null;   /* 次問題用ワンショットリスナ */
+
+function updateStats(){
+    const rate = totalQuestions ? (totalCorrect / totalQuestions * 100).toFixed(1) : '0.0';
+    const url = "dummy";
+    document.getElementById('stats').textContent = `正解 ${totalCorrect} / 連続 ${currentStreak} / 最高連続 ${maxStreak} / 正解率 ${rate}%`;
+    const tweetText = `USA市外局番クイズ: 正解数 ${totalCorrect}，最高連続 ${maxStreak}，正解率 ${rate}% ${url}`;
+    document.getElementById('tweetBtn').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+}
+
+function shuffle(arr){
+    for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function pickUnique(array, count, exclude){
+    const pool = array.filter(a => a !== exclude);
+    const unique = [...new Set(pool)];
+    shuffle(unique);
+    return unique.slice(0, count);
+}
+
+function initQuiz(){
+    const container = document.getElementById('options');
+    if(containerNextHandler){
+        container.removeEventListener('click', containerNextHandler);
+        containerNextHandler = null;
+    }
+
+    const entries = Object.entries(jsonData);
+    const [qText, qAns] = entries[Math.floor(Math.random() * entries.length)];
+    correctAnswer = qAns;
+
+    const otherAnswers = entries.map(e => e[1]);
+    const distractors = pickUnique(otherAnswers, 3, qAns);
+    const choices = shuffle([qAns, ...distractors]);
+
+    document.getElementById('pn').textContent = qText;
+    container.classList.remove('locked');
+    container.innerHTML = '';
+
+    choices.forEach(ans => {
+        const div = document.createElement('div');
+        div.className = 'option';
+        div.textContent = ans;
+        div.dataset.answer = ans;
+        div.addEventListener('click', () => onClick(div));
+        container.appendChild(div);
+    });
+
+    document.getElementById('nextBtn').style.display = 'none';
+    updateStats();
+}
+
+function scheduleContainerNext(){
+    const container = document.getElementById('options');
+    setTimeout(() => {
+        containerNextHandler = () => initQuiz();
+        container.addEventListener('click', containerNextHandler, { once: true });
+    }, 500);
+}
+
+function onClick(el){
+    const container = el.parentNode;
+    if(container.classList.contains('locked')) return;
+    container.classList.add('locked');
+
+    document.querySelectorAll('.option').forEach(o => {
+        if(o !== el) o.classList.add('disabled');
+    });
+
+    totalQuestions++;
+
+    if(el.dataset.answer === correctAnswer){
+        el.insertAdjacentHTML('afterbegin', '<span class="marker circle">⭕</span>');
+        totalCorrect++;
+        currentStreak++;
+        if(currentStreak > maxStreak) maxStreak = currentStreak;
+    }else{
+        el.insertAdjacentHTML('afterbegin', '<span class="marker cross">×</span>');
+        el.classList.add('wrong');
+        currentStreak = 0;
+        document.querySelectorAll('.option').forEach(o => {
+            if(o.dataset.answer === correctAnswer){
+                o.insertAdjacentHTML('afterbegin', '<span class="marker circle">⭕</span>');
+                o.classList.add('correct');
+            }
+        });
+    }
+
+    updateStats();
+    document.getElementById('nextBtn').style.display = 'block';
+    scheduleContainerNext();
+}
+
+/* 次へボタン */
+document.getElementById('nextBtn').addEventListener('click', initQuiz);
+
+/* DOMContentLoaded 後に jsonData を取得して開始 */
+document.addEventListener('DOMContentLoaded', () => {
+    jsonData = JSON.parse(document.getElementById('quiz-data').textContent);
+    initQuiz();
+});
+</script>
+
+<!-- JSON を本体スクリプトの直後に配置 -->
+<script id="quiz-data" type="application/json">
+{
+  "dummy1":"dummy1",
+    "dummy2":"dummy2",
+    "dummy3":"dummy3",
+    "dummy4":"dummy4",
+    "dummy5":"dummy4"
+}
+</script>
+
+</body>
+</html>
