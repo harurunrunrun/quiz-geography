@@ -6,75 +6,22 @@
 <title>USA市外局番クイズ</title>
 <style>
 body { font-family: sans-serif; margin: 0; padding: 0; }
-#header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin: 12px;
-  font-weight: bold;
-  font-size: 1rem;
-}
-#stats { white-space: nowrap; }
-#tweetBtn {
-  font-size: 0.9rem;
-  text-decoration: none;
-  border: 1px solid #1d9bf0;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
+#header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 12px; font-weight: bold; font-size: 1rem; }
+#stats  { white-space: nowrap; }
+#tweetBtn { font-size: 0.9rem; text-decoration: none; border: 1px solid #1d9bf0; padding: 4px 8px; border-radius: 4px; }
 #tweetBtn:hover { background: #e8f5fe; }
-#pn   {
-  margin: 24px auto 16px;
-  font-weight: bold;
-  font-size: 1.2rem;
-  width: 90%;
-  max-width: 500px;
-  text-align: center;
-}
-.container {
-  width: 90%;
-  max-width: 400px;
-  margin: 0 auto;
-  cursor: pointer;
-}
-.option {
-  border: 2px solid #333;
-  padding: 14px 12px;
-  margin-bottom: 14px;
-  text-align: center;
-  transition: background 0.2s ease;
-  position: relative;
-  font-size: 1rem;
-}
+#pn { margin: 24px auto 16px; font-weight: bold; font-size: 1.2rem; width: 90%; max-width: 500px; text-align: center; }
+.container { width: 90%; max-width: 400px; margin: 0 auto; }
+.option { border: 2px solid #333; padding: 14px 12px; margin-bottom: 14px; text-align: center; transition: background 0.2s ease; position: relative; font-size: 1rem; cursor: pointer; }
 .option:hover   { background: #f0f0f0; }
-.option.disabled{ opacity: 0.5; pointer-events: none; }
+.option.disabled{ opacity: 0.5; pointer-events: none; cursor: default; }
 .option.correct { color: red; }
 .option.wrong   { color: #333; }
-.marker {
-  position: absolute;
-  left: -20px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1.2rem;
-  font-weight: bold;
-}
+.marker { position: absolute; left: -20px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; font-weight: bold; }
 .marker.circle { color: red;  }
 .marker.cross  { color: blue; }
-#nextBtn {
-  display: none;
-  margin: 24px auto;
-  padding: 10px 20px;
-  font-size: 1rem;
-  cursor: pointer;
-  display: block;
-}
-@media (min-width: 480px){
-  #header{flex-wrap:nowrap;}
-  .marker{left:-24px;}
-  #nextBtn{max-width:400px;}
-}
+#nextBtn { display: none; margin: 24px auto; padding: 10px 20px; font-size: 1rem; cursor: pointer; display: block; }
+@media (min-width: 480px){ #header{flex-wrap:nowrap;} .marker{left:-24px;} #nextBtn{max-width:400px;} }
 </style>
 </head>
 <body>
@@ -89,15 +36,12 @@ body { font-family: sans-serif; margin: 0; padding: 0; }
 <button id="nextBtn">次へ</button>
 
 <script>
-/* 統計用グローバル（jsonData は DOMContentLoaded 後に取得） */
 let jsonData      = null;
 let correctAnswer = null;
 let totalCorrect  = 0;
 let currentStreak = 0;
 let maxStreak     = 0;
-let totalQuestions = 0;
-let containerNextHandler = null; 
-let readyForNext = false;        
+let totalQuestions = 0;    
 
 const isTouchDevice = (('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0) || 'ontouchstart' in window || /Mobi|Android/i.test(navigator.userAgent));
 
@@ -126,83 +70,50 @@ function pickUnique(array, count, exclude){
 }
 
 function initQuiz(){
-    const container = document.getElementById('options');
-    if(containerNextHandler){ container.removeEventListener('pointerdown',containerNextHandler); containerNextHandler=null; }
-    readyForNext=false;
-    container.style.pointerEvents='auto';
+    const container=document.getElementById('options');
+    container.replaceChildren();
 
-    const entries = Object.entries(jsonData);
-    const [qText, qAns] = entries[Math.floor(Math.random() * entries.length)];
-    correctAnswer = qAns;
+    const entries=Object.entries(jsonData);
+    const [qText,qAns]=entries[Math.floor(Math.random()*entries.length)];
+    correctAnswer=qAns;
+    const distractors=pickUnique(entries.map(e=>e[1]),3,qAns);
+    const choices=shuffle([qAns,...distractors]);
 
-    const otherAnswers = entries.map(e => e[1]);
-    const distractors = pickUnique(otherAnswers, 3, qAns);
-    const choices = shuffle([qAns, ...distractors]);
-
-    document.getElementById('pn').textContent = qText;
+    document.getElementById('pn').textContent=qText;
     container.classList.remove('locked');
-    container.innerHTML = '';
 
-    choices.forEach(ans => {
-        const div = document.createElement('div');
-        div.className = 'option';
-        div.textContent = ans;
-        div.dataset.answer = ans;
-        div.addEventListener('click', () => onClick(div));
+    choices.forEach(ans=>{
+        const div=document.createElement('div');
+        div.className='option';
+        div.textContent=ans;
+        div.dataset.answer=ans;
+        div.addEventListener('click',()=>onClick(div));
         container.appendChild(div);
     });
 
-    document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('nextBtn').style.display='none';
     updateStats();
 }
 
-function scheduleContainerNext(){
-  if(isTouchDevice){ return; }
-  
-    const container = document.getElementById('options');
-    containerNextHandler = () => {
-        if(!readyForNext) return;
-        initQuiz();
-    };
-    container.addEventListener('pointerdown', containerNextHandler, { once: true });
-    setTimeout(() => { readyForNext = true; }, 500);
-}
-
-function onClick(el){
-    const container = el.parentNode;
+unction onClick(el){
+    const container=el.parentNode;
     if(container.classList.contains('locked')) return;
     container.classList.add('locked');
 
-    if(isTouchDevice){
-        container.style.pointerEvents='none';
-    }
-
-    document.querySelectorAll('.option').forEach(o => {
-        if(o !== el) o.classList.add('disabled');
-    });
+    document.querySelectorAll('.option').forEach(o=>{ if(o!==el) { o.classList.add('disabled'); o.style.cursor='default'; } else { o.style.cursor='default'; } });
 
     totalQuestions++;
-
-    if(el.dataset.answer === correctAnswer){
-        el.insertAdjacentHTML('afterbegin', '<span class="marker circle">⭕</span>');
-        totalCorrect++;
-        currentStreak++;
-        if(currentStreak > maxStreak) maxStreak = currentStreak;
-    }else{
-        el.insertAdjacentHTML('afterbegin', '<span class="marker cross">×</span>');
-        el.classList.add('wrong');
-        currentStreak = 0;
-        document.querySelectorAll('.option').forEach(o => {
-            if(o.dataset.answer === correctAnswer){
-                o.insertAdjacentHTML('afterbegin', '<span class="marker circle">⭕</span>');
-                o.classList.add('correct');
-            }
-        });
+    if(el.dataset.answer===correctAnswer){
+        el.insertAdjacentHTML('afterbegin','<span class="marker circle">⭕</span>');
+        totalCorrect++; currentStreak++; if(currentStreak>maxStreak) maxStreak=currentStreak;
+    } else {
+        el.insertAdjacentHTML('afterbegin','<span class="marker cross">×</span>');
+        el.classList.add('wrong'); currentStreak=0;
+        document.querySelectorAll('.option').forEach(o=>{ if(o.dataset.answer===correctAnswer){ o.insertAdjacentHTML('afterbegin','<span class="marker circle">⭕</span>'); o.classList.add('correct'); } });
     }
 
     updateStats();
-    document.getElementById('nextBtn').style.display = 'block';
-    scheduleContainerNext();
+    document.getElementById('nextBtn').style.display='block';
 }
 
 document.getElementById('nextBtn').addEventListener('click', initQuiz);
@@ -213,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- JSON をスクリプトの後に配置。必要に応じて大量のデータをここに追加 -->
 <script id="quiz-data" type="application/json">
 {
   "dummy1":"dummy1",
