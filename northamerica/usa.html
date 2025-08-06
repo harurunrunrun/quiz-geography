@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>クイズ</title>
+<title>USA市外局番クイズ</title>
 <style>
 body { font-family: sans-serif; margin: 0; padding: 0; }
 #header {
@@ -102,7 +102,7 @@ function updateStats(){
     const rate = totalQuestions ? (totalCorrect / totalQuestions * 100).toFixed(1) : '0.0';
     const url = "https://harurunrunrun.github.io/quiz-geography";
     document.getElementById('stats').textContent = `正解 ${totalCorrect} / 連続 ${currentStreak} / 最高連続 ${maxStreak} / 正解率 ${rate}%`;
-    const tweetText = `USA市外局番クイズ: 正解数 ${totalCorrect}，最高連続 ${maxStreak}，正解率 ${rate}% ${url}`
+    const tweetText = `USA市外局番クイズ: 正解数 ${totalCorrect}，最高連続 ${maxStreak}，正解率 ${rate}% ${url}`;
     document.getElementById('tweetBtn').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
 }
 
