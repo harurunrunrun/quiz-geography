@@ -96,8 +96,8 @@ let totalCorrect  = 0;
 let currentStreak = 0;
 let maxStreak     = 0;
 let totalQuestions = 0;
-let containerNextHandler = null;   /* 次問題用ワンショットリスナ */
-let readyForNext = false;          /* ← 追加：スマホの自動遷移対策 */
+let containerNextHandler = null; 
+let readyForNext = false;        
 
 const isTouchDevice = (('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0) || 'ontouchstart' in window || /Mobi|Android/i.test(navigator.userAgent));
 
@@ -127,11 +127,9 @@ function pickUnique(array, count, exclude){
 
 function initQuiz(){
     const container = document.getElementById('options');
-    if(containerNextHandler){
-        container.removeEventListener('pointerdown', containerNextHandler);
-        containerNextHandler = null;
-    }
-    readyForNext = false;  // ← 追加
+    if(containerNextHandler){ container.removeEventListener('pointerdown',containerNextHandler); containerNextHandler=null; }
+    readyForNext=false;
+    container.style.pointerEvents='auto';
 
     const entries = Object.entries(jsonData);
     const [qText, qAns] = entries[Math.floor(Math.random() * entries.length)];
@@ -159,11 +157,11 @@ function initQuiz(){
 }
 
 function scheduleContainerNext(){
-  if(isTouchDevice){ return; }  // ← 追加：タッチデバイスなら早期リターン
+  if(isTouchDevice){ return; }
   
     const container = document.getElementById('options');
     containerNextHandler = () => {
-        if(!readyForNext) return;  // 2 秒経過前のタップは無視
+        if(!readyForNext) return;
         initQuiz();
     };
     container.addEventListener('pointerdown', containerNextHandler, { once: true });
@@ -174,6 +172,10 @@ function onClick(el){
     const container = el.parentNode;
     if(container.classList.contains('locked')) return;
     container.classList.add('locked');
+
+    if(isTouchDevice){
+        container.style.pointerEvents='none';
+    }
 
     document.querySelectorAll('.option').forEach(o => {
         if(o !== el) o.classList.add('disabled');
