@@ -121,6 +121,13 @@ document.addEventListener('DOMContentLoaded', () => {
     jsonData = JSON.parse(document.getElementById('quiz-data').textContent);
     initQuiz();
 });
+
+window.addEventListener('beforeunload', (e)=>{
+    const msg = '本当に終了しますか？';
+    e.preventDefault();
+    e.returnValue = msg;
+    return msg;
+});
 </script>
 
 <script id="quiz-data" type="application/json">
